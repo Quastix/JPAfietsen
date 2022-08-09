@@ -1,8 +1,6 @@
 package be.vdab.fietsen.domain;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.math.BigDecimal;
 
 @Entity
@@ -14,6 +12,8 @@ public class Docent {
     private String familienaam;
     private BigDecimal wedde;
     private String emailAdres;
+    @Enumerated(EnumType.STRING)
+    private Geslacht geslacht;
 
     public long getId() {
         return id;
@@ -31,7 +31,11 @@ public class Docent {
         return wedde;
     }
 
-    public String getEmaiAdres() {
+    public String getEmailAdres() {
         return emailAdres;
+    }
+
+    public Geslacht getGeslacht() {
+        return geslacht;
     }
 }
