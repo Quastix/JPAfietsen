@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.AbstractTransactionalJUnit4SpringContextTests;
 
+import javax.persistence.EntityManager;
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,18 +19,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import(JpaDocentRepository.class)
 class JpaDocentRepositoryTest extends AbstractTransactionalJUnit4SpringContextTests {
     private static final String DOCENTEN = "docenten";
-    private final JpaDocentRepository repository;
-
     private Docent docent;
+    private final JpaDocentRepository repository;
+    private final EntityManager manager;
 
-    public JpaDocentRepositoryTest(JpaDocentRepository repository) {
+
+    public JpaDocentRepositoryTest(JpaDocentRepository repository, EntityManager manager) {
         this.repository = repository;
+        this.manager = manager;
     }
 
     @BeforeEach
     void beforeEach() {
         docent = new Docent("test", "test", BigDecimal.TEN, "test@test.be", Geslacht.MAN);
     }
+
     private long idVanTestMan() {
         return jdbcTemplate.queryForObject("select id from docenten where voornaam = 'testM'", Long.class);
     }
@@ -64,5 +68,21 @@ class JpaDocentRepositoryTest extends AbstractTransactionalJUnit4SpringContextTe
         // JPA vult de variabele id met het getal in de kolom id in het nieuwe record.
         assertThat(docent.getId()).isPositive();
         assertThat(countRowsInTableWhere(DOCENTEN, "id=" + docent.getId())).isOne();
+    }
+
+    @Test
+    void delete() {
+        var id = idVanTestMan();
+        repository.delete(id);
+        // Je verwijderde de docent op de vorige regel.
+        // De EntityManager doet verwijderingen niet direct.
+        // Hij spaart ze op tot juist voor de commit van de transactie.
+        // Hij stuurt dan alle opgespaarde verwijderingen in één keer naar de database,
+        // via JDBC batch updates. Dit verhoogt de performantie.
+        // JPA moet in deze test de docent direct verwijderen.
+        // Enkel zo kan je de correcte werking van je delete method testen.
+        // Je voert flush uit. JPA voert de verwijderingen dan direct uit.
+        manager.flush();
+        assertThat(countRowsInTableWhere(DOCENTEN, "id = " + id)).isZero();
     }
 }

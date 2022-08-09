@@ -32,4 +32,12 @@ class JpaDocentRepository implements DocentRepository {
     public void create(Docent docent) {
         manager.persist(docent);
     }
+
+    @Override
+    public void delete(long id) {
+        //Je verwijdert een entity in twee stappen: je leest eerst de te verwijderen entity.
+        findById(id)
+                // Je voert de method remove uit. Je geeft de entity mee als parameter.
+                .ifPresent(docent -> manager.remove(docent));
+    }
 }
