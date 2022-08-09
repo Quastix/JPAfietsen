@@ -7,12 +7,14 @@ import javax.persistence.EntityManager;
 import java.util.Optional;
 
 @Repository
-class JpaDocentRepository implements DocentRepository{
+class JpaDocentRepository implements DocentRepository {
     private final EntityManager manager;
+
     // Je injecteert de EntityManager bean die Spring voor je maakt.
-    JpaDocentRepository(EntityManager manager){
+    JpaDocentRepository(EntityManager manager) {
         this.manager = manager;
     }
+
     @Override
     public Optional<Docent> findById(long id) {
         // De method find zoekt een entity op de primary key.
@@ -24,5 +26,10 @@ class JpaDocentRepository implements DocentRepository{
         // JPA werd echter gemaakt voor Optional bestond in Java.
         // Je maakt je eigen method (findById) wel “modern”. Je geeft een Optional terug.
         return Optional.ofNullable(manager.find(Docent.class, id));
+    }
+
+    @Override
+    public void create(Docent docent) {
+        manager.persist(docent);
     }
 }
