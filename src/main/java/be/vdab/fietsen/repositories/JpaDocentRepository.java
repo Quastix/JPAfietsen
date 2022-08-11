@@ -1,9 +1,13 @@
 package be.vdab.fietsen.repositories;
 
 import be.vdab.fietsen.domain.Docent;
+import be.vdab.fietsen.projections.AantalDocentenPerWedde;
+import be.vdab.fietsen.projections.IdEnEmailAdres;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -27,17 +31,60 @@ class JpaDocentRepository implements DocentRepository {
         // Je maakt je eigen method (findById) wel “modern”. Je geeft een Optional terug.
         return Optional.ofNullable(manager.find(Docent.class, id));
     }
-
     @Override
     public void create(Docent docent) {
         manager.persist(docent);
     }
-
     @Override
     public void delete(long id) {
         //Je verwijdert een entity in twee stappen: je leest eerst de te verwijderen entity.
         findById(id)
                 // Je voert de method remove uit. Je geeft de entity mee als parameter.
                 .ifPresent(docent -> manager.remove(docent));
+    }
+    @Override
+    public List<Docent> findAll(){
+        return manager.createQuery("select d from Docent d order by d.wedde",
+                Docent.class).getResultList();
+    }
+    @Override
+    public List<Docent> findByWeddeBetween(BigDecimal van, BigDecimal tot){
+        return manager.createNamedQuery("Docent.findByWeddeBetween", Docent.class)
+                .setParameter("van",
+                        // Je duidt hier de waarde aan die je in die parameter invult.
+                        // Je gebruikt de waarde die je binnenkrijgt in de method parameter van.
+                        van)
+                .setParameter("tot", tot)
+                .getResultList();
+        /*Vervangen door Named Query zie class Docent
+        return manager.createQuery(
+                "select d from Docent d where d.wedde between :van and :tot", Docent.class)
+                // Je vult een parameter in de JPQL query met een waarde.
+                // Je duidt hier aan welke parameter in de JPQL query je wil invullen: van (je typt : niet).
+                .setParameter("van",
+                        // Je duidt hier de waarde aan die je in die parameter invult.
+                        // Je gebruikt de waarde die je binnenkrijgt in de method parameter van.
+                        van)
+                .setParameter("tot", tot)
+                .getResultList();*/
+    }
+    @Override
+    public List<IdEnEmailAdres> findIdsEnEmailAdressen(){
+        return manager.createQuery(
+                "select new be.vdab.fietsen.projections.IdEnEmailAdres(d.id, d.emailAdres)" +
+                        "from Docent d", IdEnEmailAdres.class).getResultList();
+    }
+    @Override
+    public BigDecimal findGrootsteWedde(){
+        return manager.createQuery("select max(d.wedde) from Docent d", BigDecimal.class)
+                .getSingleResult();
+    }
+    @Override
+    public List<AantalDocentenPerWedde> findAantalDocentenPerWedde(){
+        return manager.createQuery(
+                "select new be.vdab.fietsen.projections.AantalDocentenPerWedde(" +
+                        "d.wedde, count(d)) from Docent d group by d.wedde",
+                AantalDocentenPerWedde.class)
+                .getResultList();
     }
 }

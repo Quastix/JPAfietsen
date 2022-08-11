@@ -48,7 +48,7 @@ class DefaultDocentServiceTest {
 
     @Test
     void opslag() {
-        // Je traint de mock: bij een oproep van findById(1)geeft die het object in docent.
+        // Je traint de mock: bij een oproep van findById(1) geeft die het object in docent.
         when(repository.findById(1)).thenReturn(Optional.of(docent));
         // Je roept de method opslag op. Die roept zelf de method findById(1) op van de mock.
         service.opslag(1, BigDecimal.TEN);
