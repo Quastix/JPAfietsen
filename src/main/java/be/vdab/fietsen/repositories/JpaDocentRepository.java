@@ -14,7 +14,13 @@ import java.util.Optional;
 class JpaDocentRepository implements DocentRepository {
     private final EntityManager manager;
 
-    // Je injecteert de EntityManager bean die Spring voor je maakt.
+    // EntityManager is een interface uit JPA. Je doet veel handelingen met een EntityManager:
+    //  • Entities als nieuwe records toevoegen aan de database.
+    //  • Records lezen als entities.
+    //  • Records wijzigen die bij entities horen.
+    //  • Records verwijderen die bij entities horen.
+    //  • Transacties te beheren.
+    //Spring Boot maakt een EntityManager als een bean, zodra je project de JPA dependency bevat.
     JpaDocentRepository(EntityManager manager) {
         this.manager = manager;
     }
@@ -31,10 +37,14 @@ class JpaDocentRepository implements DocentRepository {
         // Je maakt je eigen method (findById) wel “modern”. Je geeft een Optional terug.
         return Optional.ofNullable(manager.find(Docent.class, id));
     }
+
     @Override
     public void create(Docent docent) {
+        // Je geeft aan persist de toe te voegen entity mee als parameter.
+        // De method stuurt intern een SQL-insert statement naar de database.
         manager.persist(docent);
     }
+
     @Override
     public void delete(long id) {
         //Je verwijdert een entity in twee stappen: je leest eerst de te verwijderen entity.
@@ -42,13 +52,15 @@ class JpaDocentRepository implements DocentRepository {
                 // Je voert de method remove uit. Je geeft de entity mee als parameter.
                 .ifPresent(docent -> manager.remove(docent));
     }
+
     @Override
-    public List<Docent> findAll(){
+    public List<Docent> findAll() {
         return manager.createQuery("select d from Docent d order by d.wedde",
                 Docent.class).getResultList();
     }
+
     @Override
-    public List<Docent> findByWeddeBetween(BigDecimal van, BigDecimal tot){
+    public List<Docent> findByWeddeBetween(BigDecimal van, BigDecimal tot) {
         return manager.createNamedQuery("Docent.findByWeddeBetween", Docent.class)
                 .setParameter("van",
                         // Je duidt hier de waarde aan die je in die parameter invult.
@@ -68,23 +80,35 @@ class JpaDocentRepository implements DocentRepository {
                 .setParameter("tot", tot)
                 .getResultList();*/
     }
+
     @Override
-    public List<IdEnEmailAdres> findIdsEnEmailAdressen(){
+    public List<IdEnEmailAdres> findIdsEnEmailAdressen() {
         return manager.createQuery(
                 "select new be.vdab.fietsen.projections.IdEnEmailAdres(d.id, d.emailAdres)" +
                         "from Docent d", IdEnEmailAdres.class).getResultList();
     }
+
     @Override
-    public BigDecimal findGrootsteWedde(){
+    public BigDecimal findGrootsteWedde() {
         return manager.createQuery("select max(d.wedde) from Docent d", BigDecimal.class)
                 .getSingleResult();
     }
+
     @Override
-    public List<AantalDocentenPerWedde> findAantalDocentenPerWedde(){
+    public List<AantalDocentenPerWedde> findAantalDocentenPerWedde() {
         return manager.createQuery(
-                "select new be.vdab.fietsen.projections.AantalDocentenPerWedde(" +
-                        "d.wedde, count(d)) from Docent d group by d.wedde",
-                AantalDocentenPerWedde.class)
+                        "select new be.vdab.fietsen.projections.AantalDocentenPerWedde(" +
+                                "d.wedde, count(d)) from Docent d group by d.wedde",
+                        AantalDocentenPerWedde.class)
                 .getResultList();
+    }
+    @Override
+    public int algemeneOpslag(BigDecimal percentage) {
+        return manager.createNamedQuery("Docent.algemeneOpslag")
+                // "percentage":    verwijzing naar parameter :percentage in JPQL query (orm.xml).
+                // percentage:      waarde die je in die parameter invult.
+                .setParameter("percentage", percentage)
+                // executeUpdate voert de query uit en geeft het aantal gewijzigde records terug.
+                .executeUpdate();
     }
 }

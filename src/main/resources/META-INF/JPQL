@@ -1,0 +1,57 @@
+H12: JPQL
+Je leest tot nu één entity uit de database, aan de hand van de primary key.
+
+Je doet andere lees operaties met een JPQL query.
+JPQL (Java Persistence Query Language) lijkt op SQL.
+
+Voorbeelden van JPQL queries:
+
+select d from Docent d where d.wedde = 2200
+    docenten met een wedde gelijk aan 2200.
+select d from Docent d where d.wedde >= 2000
+    docenten met een wedde vanaf 2000.
+select d from Docent d where d.wedde * 12 >= 20000
+    docenten met een wedde * 12 vanaf 20000.
+select d from Docent d where d.wedde between 2000 and 2200
+    docenten met een wedde tussen 2000 en 2200 (grenzen inbegrepen).
+select d from Docent d where d.familienaam like 'D%'
+    docenten met een familienaam die begint met D of d.
+select d from Docent d where d.wedde is null
+    docenten met een niet-ingevulde wedde.
+select d from Docent d where d.voornaam in ('Jules', 'Cleopatra')
+    docenten met een voornaam gelijk aan Jules of Cleopatra.
+select d from Docent d where d.geslacht = be.vdab.fietsen.domain.Geslacht.VROUW
+    vrouwelijke docenten
+
+Je kan een subquery gebruiken (zoals in SQL)
+select d from Docent d where d.wedde = (select max(dd.wedde) from Docent dd)
+    docenten met een wedde gelijk aan de grootste wedde van alle docenten.
+Je kan een gecorreleerde subquery gebruiken (zoals in SQL)
+select d from Docent d where d.wedde = (select max(dd.wedde) from Docent dd where dd.voornaam = d.voornaam)
+    docenten die de grootste wedde hebben van docenten met dezelfde voornaam.
+
+Je stelt een parameter in een query voor met een naam, voorafgegaan door het teken :
+select d from Docent d where d.wedde between :van and :tot
+
+Je vermeldt in je query bij select de private variabele die hoort bij de kolom die je wil lezen.
+select d.emailAdres from Docent d
+
+
+H13 Bulk update, Bulk delete
+Uitzonderlijk wijzig of verwijder je niet één of enkele record, maar heel veel records in één keer.
+Je doet dit met de JPQL keywords update en delete. Ze versturen slechts één SQL statement.
+
+    • De wedde van docenten met 10 % verhogen: update Docent d set d.wedde = d.wedde * 1.1
+    • docenten met een wedde tot en met 2000 verwijderen: delete Docent d where d.wedde <= 2000
+
+De queries kunnen ook parameters bevatten:
+update Docent d set d.wedde = d.wedde * :factor where d.wedde <= :totEnMetWedde
+
+
+H14.2 Polymorphic query
+Dit betekent: als je in het from deel van een JPQL query een entity class vermeldt,
+bevat het resultaat van de query ook objecten van afgeleide classes.
+
+JPQL query                      Type objecten in resultaat
+select g from GroepsCursus g    GroepsCursus
+select c from Cursus c          Cursus, GroepsCursus en IndividueleCursus

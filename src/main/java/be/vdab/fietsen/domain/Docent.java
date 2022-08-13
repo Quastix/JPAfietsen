@@ -4,9 +4,15 @@ import javax.persistence.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+// Het is een entity class
+// dwz: Heeft een private variabele die de entity uniek identificeert. Bij Klant is dit de variabele id.
 @Entity
+// Duidt de bijbehorende database table aan
+// Je mag dit weglaten als de tabelnaam gelijk is aan de class naam.
 @Table(name = "docenten")
 public class Docent {
+
+    // Staat voor de private variabele die hoort bij de primary key kolom.
     @Id
     // Je plaatst de parameter strategy op IDENTITY bij een kolom met autonummering.
     // JPA vult, na het toevoegen van een record, de variabele id met het getal in de kolom id.
@@ -30,7 +36,7 @@ public class Docent {
         this.emailAdres = emailAdres;
         this.geslacht = geslacht;
     }
-
+    // JPA heeft een default constructor nodig voor zijn interne werking.
     // Voor JPA volstaat het dat de default constructor de zichtbaarheid protected heeft.
     // Door deze constructor niet public te maken is hij niet zichtbaar in de rest van je code.
     // Je kan hem niet “per ongeluk” oproepen om een docent te maken waarbij je verkeerdelijk

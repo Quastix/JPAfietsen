@@ -6,4 +6,7 @@
     <named-query name='Docent.findByWeddeBetween'>
         <query>select d from Docent d where d.wedde between :van and :tot</query>
     </named-query>
+    <named-query name='Docent.algemeneOpslag'>
+        <query> update Docent d set d.wedde = d.wedde + d.wedde * :percentage / 100 </query>
+    </named-query>
 </entity-mappings>

@@ -1,0 +1,273 @@
+Inheritance bestaat tussen classes. Inheritance bestaat niet tussen database tables.
+Je kan inheritance in de database nabootsen op drie manieren, die je hier leert:
+    • Table per class hiërarchy.
+    • Table per subclass.
+    • Table per concrete class.
+
+
+Table per class hiërarchy:
+
+Inheritance (overerving) structuur:
+basisklasse:        Cursus
+afgeleide klasse:   GroepsCursus en IndividueleCursus
+
+Voer het script Hierarchy.sql uit. Dit voegt een table cursussen toe in de database fietsen
+De tabel cursussen heeft 6 kolommen:
+    • id INT
+    • naam VARCHAR(45)
+    • van DATE
+    • tot DATE
+    • duurtijd TINYINT
+    • soort ENUM('G','I')
+
+De table cursussen is een tabel voor alle classes in de inheritance.
+De table bevat kolommen voor alle attributen van al die classes.
+
+De kolom "soort" is een discriminator kolom. (Betekenis discriminator: maakt onderscheid, neemt waar)
+Die geeft het type entity aan dat een record voorstelt. De kolom bevat:
+    • G als het record een GroepsCursus voorstelt.
+    • I als het record een IndividueleCursus voorstelt.
+Er is geen bijbehorende private variabele. Die is ook niet nodig: je maakt het onderscheid door
+te werken met twee derived classes: GroepsCursus en IndividueleCursus.
+
+Voordelen
+    • JPA voegt een cursus toe met één insert statement.
+      JPA wijzigt of verwijdert een cursus ook met één statement.
+    • Als je een attribuut toevoegt aan een class, moet je slechts 1 kolom toevoegen aan één table.
+Nadelen
+    • De table bevat veel kolommen als de classes veel attributen hebben.
+    • Je kan sommige kolommen niet instellen als verplicht in te vullen.
+      Je kan bijvoorbeeld de kolom Van niet instellen als verplicht in te vullen:
+      je laat de kolom leeg als je een IndividueleCursus toevoegt.
+
+Extra annotations bij de basisklasse Cursus:
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "soort")
+public abstract class Cursus {...}
+
+@Inheritance staat bij de hoogste class in de inheritance hiërarchie.
+strategy duidt de manier aan waarmee je inheritance nabootst in de database.
+SINGLE_TABLE staat voor “table per class hiërarchy”.
+@DiscriminatorColumn duidt de naam van discriminator kolom aan.
+Betekenis discriminator: maakt onderscheid, neemt waar
+
+Extra annotations bij de afgeleide klasse GroepsCursus en IndividueleCursus:
+@DiscriminatorValue("G")
+public class GroepsCursus extends Cursus {...}
+
+Je duidt bij @DiscriminatorValue aan dat de discriminator kolom (Soort)
+G bevat als een record hoort bij de huidige class: Groepscursus.
+
+@DiscriminatorValue("I")
+public class Individuele Cursus extends Cursus {...}
+
+Je duidt bij @DiscriminatorValue aan dat de discriminator kolom (Soort)
+I bevat als een record hoort bij de huidige class: Individuele cursussen.
+
+Testen voor een afgeleide klasse aan te maken:
+@Test
+    void createGroepsCursus() {
+        var cursus = new GroepsCursus("testGroep2", EEN_DATUM, EEN_DATUM);
+        repository.create(cursus);
+        assertThat(countRowsInTableWhere(CURSUSSEN, "id = '" + cursus.getId() + "'")).isOne();
+    }
+
+    @Test
+    void createIndividueleCursus() {
+        var cursus = new IndividueleCursus("testIndividueel2", 7);
+        repository.create(cursus);
+        assertThat(countRowsInTableWhere(CURSUSSEN, "id = '" + cursus.getId() + "'")).isOne();
+    }
+
+
+Table per subclass:
+
+Inheritance (overerving) structuur:
+basisklasse:        Cursus
+afgeleide klasse:   GroepsCursus en IndividueleCursus
+
+Voer het script SubClass.sql uit. Dit maakt een nieuwe versie van de table cursussen
+en maakt de tables groepscursussen en individuelecursussen aan.
+De tabel cursussen heeft 2 kolommen:
+    • id INT
+    • naam VARCHAR(45)
+De tabel groepscursussen heeft 3 kolommen:
+    • id INT
+    • van DATE
+    • tot DATE
+De tabel individuelecursussen heeft 2 kolommen:
+    • id INT
+    • duurtijd TINYINT
+
+De database bevat een table per class.
+Elke table bevat enkel kolommen voor de attributen in de bijbehorende class.
+De primary key van een table die hoort bij een derived class is ook een foreign key.
+Hij verwijst naar de primary key van de table die hoort bij de base class.
+    • id is in de table cursussen een autonumber kolom,
+      maar niet in de tables groepscursussen en individuelecursussen.
+    • id is in de tables groepscursussen en individuelecursussen primary key
+      en tegelijk foreign key verwijzend naar id in de table cursussen.
+JPA voegt een individuele cursus toe met volgende stappen:
+    • insert into cursussen(naam) values ('een individuelecursus')
+    • JPA haalt de waarde op van de kolom id in dit nieuwe record.
+      We veronderstellen dat de waarde 7 is.
+    • insert into individuelecursussen(id, duurtijd) values (7, 12);
+
+Voordelen:
+    • Als je een attribuut toevoegt aan een class, moet je slechts 1 kolom toevoegen aan één table.
+    • Je kan elke kolom als verplicht in te vullen kolom aanduiden als je dit wenst.
+Nadelen:
+    • JPA stuurt meerdere insert statements naar meerdere tables om een cursus toe te voegen.
+      JPA stuurt ook bij het wijzigen of verwijderen van cursussen meerdere statements naar
+      meerdere tables. Dit benadeelt de performantie.
+    • JPA stuurt een select statement met een join van meerdere tables om cursussen te lezen.
+      Dit benadeelt de performantie.
+
+Extra annotations bij de basisklasse Cursus:
+@Inheritance(strategy = InheritanceType.JOINED)
+public abstract class Cursus {...}
+
+Je plaatst bij table per subclass de strategy op JOINED.
+
+Extra annotations bij de afgeleide klasse GroepsCursus en IndividueleCursus:
+@Table(name ="groepscursussen")
+public class GroepsCursus extends Cursus{...}
+
+@Table(name ="individuelecursussen")
+public class IndividueleCursus extends Cursus{...}
+
+@Table: Duidt de bijbehorende database table aan
+Je mag dit weglaten als de tabelnaam gelijk is aan de class naam.
+
+Testen voor een afgeleide klasse aan te maken:
+@Test
+    void createGroepsCursus() {
+        var cursus = new GroepsCursus("testGroep2", EEN_DATUM, EEN_DATUM);
+        repository.create(cursus);
+        assertThat(countRowsInTableWhere(CURSUSSEN, "id = '" + cursus.getId() + "'")).isOne();
+        assertThat(countRowsInTableWhere(GROEPS_CURSUSSEN, "id = '" + cursus.getId() + "'")).isOne();
+    }
+
+    @Test
+    void createIndividueleCursus() {
+        var cursus = new IndividueleCursus("testIndividueel2", 7);
+        repository.create(cursus);
+        assertThat(countRowsInTableWhere(CURSUSSEN, "id = '" + cursus.getId() + "'")).isOne();
+        assertThat(countRowsInTableWhere(INDIVIDUELE_CURSUSSEN, "id = '" + cursus.getId() + "'")).isOne();
+    }
+
+
+Tables per concrete class:
+
+De database bevat enkel tables voor de derived classes.
+Voer het script ConcreteClass.sql uit. Dit verwijdert de table cursussen
+en maakt nieuwe versies van de tables groepscursussen en individuelecursussen:
+De tabel groepscursussen heeft 4 kolommen:
+    • id INT
+    • naam VARCHAR(45)
+    • van DATE
+    • tot DATE
+De tabel individuelecursussen heeft 3 kolommen:
+    • id INT
+    • naam VARCHAR(45)
+    • duurtijd TINYINT
+
+Je kan geen autonumber veld gebruiken als primary key. De tables groepscursussen en
+individuelecursussen zouden gelijke nummers hebben in hun primary key. JPA laat dit niet toe.
+
+Een oplossing is een sequence, gedeeld door beide tables. MySQL kent echter geen sequence.
+
+Je gebruikt een andere oplossing. Je vult de kolom id van een nieuw record met een UUID.
+Dit is een string met hexadecimale tekens. Elke UUID is uniek over de hele wereld.
+
+Je bewaart de UUID in de database niet in een kolom van het type varchar.
+Dit zou de performantie benadelen. Je kiest een compacter, performanter type: binary(16).
+
+MySQL bevat functies ter ondersteuning van UIID’s:
+    • uuid() geeft een nieuwe UUID (in string formaat).
+    • uuid_to_bin(String) converteert een UUID (in string formaat) naar zijn binair formaat.
+    • bin_to_uuid(binair) converteert een binaire waarde naar een UUID (in string formaat).
+Je leest met volgend sql statement de UUID’s als hexadecimale strings:
+select bin_to_uuid(id), naam from groepscursussen
+
+Voordelen:
+    • De tables bevatten geen overtollige kolommen.
+      De table groepscursussen bevat enkel kolommen met data over groepscursussen.
+    • JPA stuurt één insert statement naar één table om een cursus toe te voegen.
+      JPA stuurt ook één statement om een cursus te wijzigen of te verwijderen.
+Nadelen:
+    • Als je een attribuut toevoegt aan de base class, moet je aan meerdere tables een kolom
+      toevoegen. Voorbeeld: je voegt prijs toe aan Cursus.
+      Je moet een kolom prijs toevoegen aan beide tables.
+    • UUID primary keys zijn minder leesbaar dan autonumber primary keys.
+
+Wijzigingen in de annotations van de basisklasse Cursus:
+@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+
+TABLE_PER_CLASS duidt “table per concrete class” aan.
+
+Verwijder @GeneratedValue(strategy = GenerationType.IDENTITY).
+Typ @Column(columnDefinition = "binary(16)") voor de variabele id.
+
+Wijzig het type van de variabele id naar UUID.
+Voeg aan de geparametriseerde constructor volgende opdracht toe:
+id = UUID.randomUUID(); // nieuwe unieke UUID toekennen
+
+Wijzig het returntype van de method getId() naar UUID.
+GroepsCursus en IndividueleCursus annotations blijven dezelfde.
+
+Annotations bij de afgeleide klasse GroepsCursus en IndividueleCursus:
+Blijven hetzelfde.
+
+Wijzigingen van de repositories:
+Wijzig in CursusRepository in de method findById het type van de param. id naar UUID.
+Wijzig in JpaCursusRepository in de method findById het type van de param. id naar UUID.
+
+Wijzigen van JpaCursusRepositoryTest:
+Verwijder de constante CURSUSSEN.
+Maak een variabele: private final EntityManager manager;
+Wijzig de constructor:
+JpaCursusRepositoryTest(JpaCursusRepository repository,EntityManager manager){
+    this.repository = repository;
+    this.manager = manager;
+}
+Wijzig enkele methods:
+private UUID idVanTestGroepsCursus() {
+    return jdbcTemplate.queryForObject(
+        "select bin_to_uuid(id) from groepscursussen where naam = 'testGroep'",
+        UUID.class);
+        }
+private UUID idVanTestIndividueleCursus() {
+    return jdbcTemplate.queryForObject(
+        "select bin_to_uuid(id) from individuelecursussen where naam='testIndividueel'",
+        UUID.class);
+}
+@Test void findByOnbestaandeId() {
+    assertThat(repository.findById(UUID.randomUUID())).isEmpty();
+}
+@Test void createGroepsCursus() {
+    var cursus = new GroepsCursus("testGroep2", EEN_DATUM, EEN_DATUM);
+    repository.create(cursus); manager.flush(); 
+    assertThat(countRowsInTableWhere(GROEPS_CURSUSSEN,
+        "id = uuid_to_bin('" + cursus.getId() + "')")).isOne();
+}
+@Test void createIndividueleCursus() {
+    var cursus = new IndividueleCursus("testIndividueel2", 7);
+    repository.create(cursus);
+    manager.flush();
+    assertThat(countRowsInTableWhere(INDIVIDUELE_CURSUSSEN,
+        "id = uuid_to_bin('" + cursus.getId() + "')")).isOne();
+}
+(1)
+Je voegde op de vorige regel een cursus met een UUID primary key toe.
+De EntityManager voert de toevoegingen niet direct uit.
+Hij spaart ze op tot juist voor de commit van de transactie.
+Hij stuurt dan alle opgespaarde toevoegingen in één keer naar de database,
+via JDBC batch updates. Dit verhoogt de performantie.
+In deze test is het wel nodig dat JPA de cursus onmiddellijk toevoegt.
+Enkel zo kan je de correcte werking van onze create method testen.
+Je voert flush uit. Die voert de gevraagde toevoegingen direct uitvoert.
+Als je een autonumber primary key hebt, kan JPA geen JDBC batch updates gebruiken,
+omdat je daarbij de gegenereerde primary key waarden niet kan ophalen.
+JPA voegt dan een record toe zodra je de persist method uitvoert op de EntityManager.

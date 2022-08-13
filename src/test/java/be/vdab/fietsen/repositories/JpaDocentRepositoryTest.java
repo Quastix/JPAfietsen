@@ -13,7 +13,6 @@ import org.springframework.test.context.junit4.AbstractTransactionalJUnit4Spring
 import javax.persistence.EntityManager;
 import java.math.BigDecimal;
 
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest(showSql = false)
@@ -95,8 +94,9 @@ class JpaDocentRepositoryTest extends AbstractTransactionalJUnit4SpringContextTe
                 .extracting(Docent::getWedde)
                 .isSorted();
     }
+
     @Test
-    void findByWeddeBetween(){
+    void findByWeddeBetween() {
         var duizend = BigDecimal.valueOf(1_000);
         var tweeduizend = BigDecimal.valueOf(2_000);
         var docenten = repository.findByWeddeBetween(duizend, tweeduizend);
@@ -104,18 +104,21 @@ class JpaDocentRepositoryTest extends AbstractTransactionalJUnit4SpringContextTe
                 .allSatisfy(
                         docent -> assertThat(docent.getWedde()).isBetween(duizend, tweeduizend));
     }
+
     @Test
-    void findIdsEnEmailAdressen(){
-    assertThat(repository.findIdsEnEmailAdressen())
-            .hasSize(countRowsInTable(DOCENTEN));
+    void findIdsEnEmailAdressen() {
+        assertThat(repository.findIdsEnEmailAdressen())
+                .hasSize(countRowsInTable(DOCENTEN));
     }
+
     @Test
-    void findGrootsteWedde(){
+    void findGrootsteWedde() {
         assertThat(repository.findGrootsteWedde()).isEqualByComparingTo(
                 jdbcTemplate.queryForObject("select max(wedde) from docenten", BigDecimal.class));
     }
+
     @Test
-    void findAantalDocentenPerWedde(){
+    void findAantalDocentenPerWedde() {
         var duizend = BigDecimal.valueOf(1_000);
         assertThat(repository.findAantalDocentenPerWedde())
                 .hasSize(jdbcTemplate.queryForObject(
@@ -130,5 +133,15 @@ class JpaDocentRepositoryTest extends AbstractTransactionalJUnit4SpringContextTe
                 .extracting(AantalDocentenPerWedde::aantal)
                 // Dit moet gelijk zijn aan het aantal docenten met een wedde 1000.
                 .isEqualTo((long) super.countRowsInTableWhere(DOCENTEN, "wedde = 1000"));
+    }
+
+    @Test
+    void algemeneOpslag() {
+        assertThat(repository.algemeneOpslag(BigDecimal.TEN))
+                // Er moeten evenveel docenten opslag gekregen hebben als er docenten zijn.
+                .isEqualTo(countRowsInTable(DOCENTEN));
+        // De docent met de voornaam testM had een wedde van 1000. Dit moet nu 1100 zijn.
+        assertThat(countRowsInTableWhere(DOCENTEN,
+                "wedde = 1100 and id = " + idVanTestMan())).isOne();
     }
 }

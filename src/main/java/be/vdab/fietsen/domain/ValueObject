@@ -1,0 +1,72 @@
+H 15 Value object:
+• Value objecten hebben geen attribuut dat hen uniek identificeert.
+• Value objecten hebben geen zelfstandige levensduur.
+  Een value object verdwijnt wanneer de entity verdwijnt waartoe het value object behoort.
+
+Voorbeeld:
+de entity class Campus en de value object class Adres.
+Het adres behoort tot de campus.
+
+Campus is een entity:
+    • Campus bevat een attribuut id dat elke campus uniek voorstelt.
+    • Een campus verdwijnt niet op het moment dat een ander object verdwijnt.
+Adres is een value object:
+    • Adres bevat geen attribuut dat elk adres uniek voorstelt.
+    • Als een campus verdwijnt, heb je zijn adres niet meer nodig. Dit adres verdwijnt mee.
+
+Value object classes zijn herbruikbaar:
+ook een docent heeft een adres, ook een cursist heeft een adres, ….
+
+H15.1 Immutable
+Je kan een class maken als mutable of immutable:
+Mutable     De class bevat methods (bvb. setters)
+            om na de aanmaak van een object van die class attributen te wijzigen.
+Immutable   De class bevat een constructor met een parameter per attribuut.
+            Je kan na het aanmaken van een object de attributen enkel lezen, niet wijzigen.
+            De class bevat dus bijvoorbeeld geen setters.
+
+Men raadt aan zoveel mogelijk immutable te werken. Dit geldt zeker voor value objects.
+
+H15.2 Database
+Als een entity één bijbehorend value object heeft, bevat het record dat bij de entity hoort
+ook kolommen voor de attributen van het value object.
+
+De table campussen bevat campus data, waaronder ook adres data.
+Het kan dus dat je data:
+    • in je code splitst in meerdere classes (om tot de herbruikbare class Adres te komen).
+    • in de database in één table bijhoudt.
+
+Er is weinig kans dat campussen hetzelfde adres hebben.
+Het is dus zinloos straat, huisnr, postcode en gemeente in een aparte table te plaatsen.
+Dit zou de performantie benadelen.
+
+H15.6 CRUD operaties
+Je kan CRUD operaties toepassen op een entity die een value object bevat zonder nieuwe kennis.
+Je vindt hier onder voorbeeldcode, zonder service layer en repository layer.
+H15.6.1 Create
+var adres = new Adres("straat X", "huisnr X", "postcode X", "gemeente X");
+var campus = new Campus("naam X", adres);
+entityManager.persist(campus);
+// JPA stuurt een insert statement naar de table campussen
+H15.6.2 Read
+var campus = entityManager.find(Campus.class, 1);
+// JPA stuurt een select statement naar de table campussen,
+// maakt met de data uit dit record een Campus object en verbonden Adres object
+H15.6.3 Update
+var campus = entityManager.find(Campus.class, 1);
+var nieuwAdres = new Adres("straat Y","huisnr Y","postcode Y","gemeente Y");
+campus.setAdres(nieuwAdres); // dan moet de Campus class een setAdres hebben
+// JPA stuurt een update statement naar de table campussen
+// om het record met primary key waarde 1 te wijzigen.
+H15.6.4 Delete
+var campus = entityManager.find(Campus.class, 1); entityManager.remove(campus);
+// JPA stuurt een delete statement naar de table campussen
+// om het record met primary key waarde 1 te verwijderen
+
+H15.7 JPQL
+Je kan in een query verwijzen naar attributen van een value object die bij een entity horen.
+Voorbeeld: je leest de campussen uit West-Vlaanderen, gesorteerd op gemeente:
+
+select c from Campus c
+where c.adres.postcode between '8000' and '8999'
+order by c.adres.gemeente
