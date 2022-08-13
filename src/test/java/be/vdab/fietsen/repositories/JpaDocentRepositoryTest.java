@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import(JpaDocentRepository.class)
 class JpaDocentRepositoryTest extends AbstractTransactionalJUnit4SpringContextTests {
     private static final String DOCENTEN = "docenten";
+    private static final String DOCENTEN_BIJNAMEN = "docentenbijnamen";
     private Docent docent;
     private final JpaDocentRepository repository;
     private final EntityManager manager;
@@ -143,5 +144,21 @@ class JpaDocentRepositoryTest extends AbstractTransactionalJUnit4SpringContextTe
         // De docent met de voornaam testM had een wedde van 1000. Dit moet nu 1100 zijn.
         assertThat(countRowsInTableWhere(DOCENTEN,
                 "wedde = 1100 and id = " + idVanTestMan())).isOne();
+    }
+
+    @Test
+    void bijnamenLezen() {
+        assertThat(repository.findById(idVanTestMan()))
+                .hasValueSatisfying(docent ->
+                        assertThat(docent.getBijnamen()).containsOnly("test"));
+    }
+
+    @Test
+    void bijnaamToevoegen() {
+        repository.create(docent);
+        docent.addBijnaam("test");
+        manager.flush();
+        assertThat(countRowsInTableWhere(DOCENTEN_BIJNAMEN,
+                "bijnaam = 'test' and docentId = " + docent.getId())).isOne();
     }
 }

@@ -1,0 +1,31 @@
+De multipliciteit tussen Campus en Adres is één: een Campus heeft één Adres.
+
+Bij meervoudige multipliciteit bevat de entity een verzameling value objects.
+De verzameling bevindt zich in een andere table dan de tables met de entities.
+
+Het type van de value objects in de verzameling kan:
+    • een basistype zijn: Byte, Short, Integer, Long, Float, Double, Boolean, Char, String,
+       BigDecimal, LocalDate, LocalTime, LocalDateTime, URL. Je leert dit in dit hoofdstuk.
+    • een eigen geschreven class zijn. Je leert dit in het volgende hoofdstuk.
+
+Voorbeeld: een docent heeft een verzameling bijnamen (van het basistype String):
+
+Voorbeeld van 2 tabellen:
+tabel docenten met 6 kolommen:
+    • id INT
+    • voornaam VARCHAR(30)
+    • familienaam VARCHAR(30)
+    • wedde DECIMAL(10,2)
+    • emailAdres VARCHAR(60)
+    • geslacht ENUM(...)
+
+tabel docentenbijnamen met 2 kolommen:
+    • docentId INT
+    • bijnaam VARCHAR(45)
+
+Docent is een entity:
+    • Docent bevat een attribuut id dat elke docent uniek voorstelt.
+    • Een docent verdwijnt niet op het moment dat een ander object verdwijnt.
+bijnamen is een verzameling value objects:
+    • Een bijnaam bevat geen attribuut dat elke bijnaam uniek voorstelt.
+    • Als een docent verdwijnt, heb je zijn bijnamen niet meer nodig. Ze verdwijnen.

@@ -70,3 +70,77 @@ Voorbeeld: je leest de campussen uit West-Vlaanderen, gesorteerd op gemeente:
 select c from Campus c
 where c.adres.postcode between '8000' and '8999'
 order by c.adres.gemeente
+
+H15.8 Value object classes detecteren
+Je detecteert met volgende tip value object classes.
+Als je eenzelfde groep kolommen vindt in één of meerdere database tables,
+onderzoek je of voor die groep een groepsnaam bestaat. Als dit zo is, maak je een value object
+class met die groepsnaam. De class bevat een private variabele per kolom uit die groep.
+
+Voorbeeld van 2 tabellen:
+tabel werknemers met 9 kolommen:
+    • id INT
+    • voornaam VARCHAR(45)
+    • familienaam VARCHAR(45)
+    • straat VARCHAR(45)
+    • huisnummer VARCHAR(45)
+    • postcode VARCHAR(45)
+    • gemeente VARCHAR(45)
+    • wedde DECIMAL(10,2)
+    • inDienst DATE
+
+tabel klanten met 7 kolommen:
+    • id INT
+    • naam VARCHAR(45)
+    • straat VARCHAR(45)
+    • huisnummer VARCHAR(45)
+    • postcode VARCHAR(45)
+    • gemeente VARCHAR(45)
+    • kortingsPercentage DECIMAL(10,2)
+
+Je vindt in beide tables dezelfde groep kolommen: straat, huisnummer, postcode, gemeente.
+De groep heet Adres. Je maakt een value object class Adres
+De Java classes zullen er als volgt uitzien:
+    • Een werknemer heeft een adres
+    • Een klant heeft ook een adres
+
+H15.9 Aggregate
+De samenhang van een entity en zijn bijbehorende value object(s) heet een aggregate.
+Het voorbeeld hierboven heeft twee aggregates:
+    • De werknemer en zijn adres.
+    • De klant en zijn adres.
+
+
+H15.10 Form object
+Een value object kan een form object zijn in je website.
+
+Bij de submit van de form maakt Spring een value object met de geparametriseerde constructor.
+Spring vult de constructor parameters in met waarden die de gebruiker typte in de invoervakken.
+
+Als je een entity, die een value object bevat, wil gebruiken als form object heb je wat meer werk.
+Bij de submit van de form maakt Spring een entity met de geparametriseerde constructor.
+Spring probeert daarna het bijbehorende value object te maken met zijn default constructor.
+Spring probeert daarna de waarden die de gebruiker typte over te brengen naar de private
+variabelen van het value object met setters. Als die ontbreken, krijg je een exception.
+Het zou jammer zijn dat je die setters moet toevoegen: een value object is best immutable.
+
+Spring biedt een oplossing. Hierbij vult Spring de data die de gebruiker typte rechtstreeks in de
+private variabelen van de entity (het form object) en in de private variabelen van het value object.
+
+Je controller bevat een method die de submit van de form verwerkt:
+
+@PostMapping public ModelAndView verwerkForm(@Valid Campus campus, Errors errors) { … }
+
+Je voegt nog een method toe aan de controller:
+
+@InitBinder("campus") 
+void initBinder(DataBinder binder) { 
+    binder.initDirectFieldAccess(); 
+}
+(1) Je typt @InitBinder voor een method.
+    Je vermeldt als parameter de naam waarmee je het form object aanbiedt aan Thymeleaf.
+(2) De method naam is vrij te kiezen. De method moet een DataBinder parameter hebben.
+    De DataBinder is het object dat Spring intern gebruikt om de data, die gebruiker typt,
+    in te vullen in het form object.
+(3) Je voert initDirectFieldAccess uit. De DataBinder vult dan de getypte data
+    rechtstreeks in in de private variabelen van het form object.
