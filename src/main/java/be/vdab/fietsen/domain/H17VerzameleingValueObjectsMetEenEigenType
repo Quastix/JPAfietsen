@@ -1,0 +1,46 @@
+Voorbeeld:
+een Campus entity heeft meerdere TelefoonNr value objects.
+Als je een campus verwijdt, heb je zijn telefoonnummers niet meer nodig. Ze verdwijnen dan.
+
+Voorbeeld van 2 tabellen:
+tabel campussen met 6 kolommen:
+    • id INT
+    • naam VARCHAR(45)
+    • straat VARCHAR(45)
+    • huisnummer VARCHAR(45)
+    • postcode VARCHAR(45)
+    • gemeente VARCHAR(45
+
+tabel campussentelefoonnrs met 2 kolommen:
+    • nummer VARCHAR(50)
+    • opmerking VARCHAR(50)
+    • campusId INT
+    • fax TINYINT
+
+H17.4 Value object toevoegen aan de verzameling
+Het toevoegen van een telefoonnummer aan een campus werkt
+zoals het toevoegen van een bijnaam aan een docent.
+
+Als je in een transactie TelefoonNr objecten toevoegt aan telefoonNrs in een Campus entity,
+stuurt JPA bij de commit per TelefoonNr een insert statement naar campussentelefoonnrs.
+
+H17.5 Value object verwijderen uit de verzameling
+Het verwijderen van een telefoonnummer uit een campus
+werkt zoals het verwijderen van een bijnaam uit een docent.
+
+Als je in een transactie TelefoonNr objecten verwijdert uit telefoonNrs in een Campus entity,
+stuurt JPA bij de commit per TelefoonNr een delete statement naar campussentelefoonnrs.
+
+H17.6 Entity verwijderen
+Als je een campus verwijdert, verwijdert JPA de bijbehorende records in campussentelefoonnrs.
+
+H17.7 Value object wijzigen
+Je kan een value object niet wijzigen als het immutable is.
+Je wijzigt één telefoonnummer met volgende stappen.
+    1. Je verwijdert het te wijzigen telefoonnummer uit de verzameling.
+    2. Je voegt een telefoonnummer met de wijzigingen toe aan de verzameling.
+
+H17.8 Verzameling value objects detecteren
+Als je in een één op veel relatie tussen de tables A en B, bij het verwijderen van een record uit de
+table A de gerelateerde records uit de table B beter ook verwijdert, stel je de records uit de table B
+voor als een verzameling value objects die behoren tot een entity die hoort bij table A.
