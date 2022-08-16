@@ -9,7 +9,7 @@ tabel campussen met 6 kolommen:
     • straat VARCHAR(45)
     • huisnummer VARCHAR(45)
     • postcode VARCHAR(45)
-    • gemeente VARCHAR(45
+    • gemeente VARCHAR(45)
 
 tabel campussentelefoonnrs met 2 kolommen:
     • nummer VARCHAR(50)

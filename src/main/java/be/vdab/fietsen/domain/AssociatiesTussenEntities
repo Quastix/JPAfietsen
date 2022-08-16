@@ -1,0 +1,50 @@
+H18 many-to-one
+
+Je leert vanaf dit hoofdstuk werken met associaties tussen entities.
+Je leert in dit hoofdstuk de eerste soort associatie: many-to-one.
+
+Je maakt in Docent een many-to-one associatie naar Campus.
+    • De multipliciteit is * aan de kant van Docent
+      en 1 aan de kant van Campus.
+      Meerdere docenten horen bij één campus.
+    • Het is voorlopig een gerichte associatie (de pijl):
+      Je weet welke campus bij een docent hoort.
+      Je weet niet welke docenten bij een campus horen.
+
+Je maakt de associatie later bidirectioneel. Je weet dan ook welke docenten bij een campus horen.
+Een bidirectionele associatie is in gebruik handiger dan een gerichte associatie.
+De code van een bidirectionele associatie is echter complexer dan die van een gerichte associatie.
+
+H18.1 Database
+
+Voer het script CampusBijDocent.sql uit. Dit maakt in de table docenten een kolom campusId.
+Dit is een foreign key die verwijst naar de id in de table campussen.
+Er is een veel op één relatie tussen docenten en campussen:
+
+tabel docenten met 7 kolommen:
+    • id INT
+    • voornaam VARCHAR(30)
+    • familienaam VARCHAR(30)
+    • wedde DECIMAL(10,2)
+    • emailAdres VARCHAR(60)
+    • geslacht ENUM(...)
+    • CampusId INT              Foreign Key
+
+tabel campussen met 6 kolommen:
+    • id INT
+    • naam VARCHAR(45)
+    • straat VARCHAR(45)
+    • huisnummer VARCHAR(45)
+    • postcode VARCHAR(45)
+    • gemeente VARCHAR(45)
+
+H18.2 Java
+Je definieert de associatie in Docent met een private variabele van het type Campus.
+Elk Docent object heeft zo een reference naar het bijbehorend Campus object.
+Dit is een groot verschil met de database voorstelling.
+
+Als je in Docent de associatie zou definiëren als long campusId,
+weet je met die variabele enkel het campus nummer van een docent.
+
+Als je de associatie definieert als Campus campus, weet je met die variabele
+elke campus eigenschap van een docent. Voorbeeld: campus.getNaam();

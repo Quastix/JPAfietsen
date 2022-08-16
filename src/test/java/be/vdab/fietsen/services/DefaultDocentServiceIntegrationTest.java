@@ -24,7 +24,7 @@ import java.math.BigDecimal;
 // ResourcePattern bevat de naam van de class van de bean.
 @ComponentScan(value = "be.vdab.fietsen.repositories",
         resourcePattern = "JpaDocentRepository.class")
-@Sql("/insertDocent.sql")
+@Sql({"/insertCampus.sql", "/insertDocent.sql"})
 class DefaultDocentServiceIntegrationTest extends AbstractTransactionalJUnit4SpringContextTests {
     private final static String DOCENTEN = "docenten";
     private final DefaultDocentService service;

@@ -42,18 +42,30 @@ public class Docent {
     @Column(name = "bijnaam")
     // JPA ondersteunt List, Set en Map.
     private Set<String> bijnamen;
+    // @ManyToOne staat bij een variabele die een many-to-one associatie voorstelt.
+    // De bijbehorende foreign key kolom campusId is verplicht in te vullen.
+    // Je plaatst dan de parameter optional op false. JPA controleert dan bij het toevoegen of
+    // wijzigen van een record dat de kolom ingevuld is. JPA werpt een exception als dit niet zo is.
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    // De table docenten hoort bij de huidige class Docent.
+    // @JoinColumn duidt de kolom campusId in de table aan.
+    // Je kiest de foreign key kolom die verwijst naar de table campussen
+    // die hoort bij de geassocieerde entity (Campus).
+    @JoinColumn(name = "campusId")
+    private Campus campus;
 
     // Je maakt geen parameter voor de private variabele id.
     // Deze parameter is niet nodig. Je moet geen id meegeven als je een nieuw Docent object maakt.
     // De database bepaalt de id bij het toevoegen van het record. JPA vult hiermee de private variabele id.
     public Docent(String voornaam, String familienaam, BigDecimal wedde,
-                  String emailAdres, Geslacht geslacht) {
+                  String emailAdres, Geslacht geslacht, Campus campus) {
         this.voornaam = voornaam;
         this.familienaam = familienaam;
         this.wedde = wedde;
         this.emailAdres = emailAdres;
         this.geslacht = geslacht;
         this.bijnamen = new LinkedHashSet<>();
+        setCampus(campus);
     }
 
     // JPA heeft een default constructor nodig voor zijn interne werking.
@@ -121,5 +133,13 @@ public class Docent {
         // Als je op die Set add of remove uitvoert, krijg je een UnsupportedOperationException.
         // De getter geeft zo een read-only voorstelling van de Set.
         return Collections.unmodifiableSet(bijnamen);
+    }
+
+    public Campus getCampus() {
+        return campus;
+    }
+
+    public void setCampus(Campus campus) {
+        this.campus = campus;
     }
 }
